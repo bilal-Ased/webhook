@@ -16,7 +16,7 @@ def incoming_call(call_id: str, caller_name: str):
     }
 
 
-@app.get("/webhook")
+@app.post("/webhook")
 async def webhook(request:Request):
     data = await request.json()
     print(data)
