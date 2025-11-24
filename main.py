@@ -10,4 +10,7 @@ def read_root():
 @app.get("/incoming-call")
 def incoming_call(call_id: str, caller_name: str):
     print(call_id, caller_name)
-    return {"status": "ok"}
+    return {
+        "call_id": call_id,
+        "caller_name": caller_name
+    }
