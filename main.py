@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Request
 
 app = FastAPI()
 
@@ -14,3 +14,10 @@ def incoming_call(call_id: str, caller_name: str):
         "call_id": call_id,
         "caller_name": caller_name
     }
+
+
+@app.get("/webhook")
+async def webhook(request:Request):
+    data = await request.json()
+    print(data)
+    return {"data": data}
