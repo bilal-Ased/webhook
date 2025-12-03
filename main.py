@@ -1,4 +1,6 @@
 from fastapi import FastAPI,Request
+from fastapi.responses import PlainTextResponse, JSONResponse
+
 
 app = FastAPI()
 
@@ -21,3 +23,16 @@ async def webhook(request:Request):
     data = await request.json()
     print(data)
     return {"data": data}
+
+
+
+# nlyas webhook verification endpoint
+@app.get("/nylas/webhook")
+async def verify_webhook(challenge: str = ""):
+    """
+    Nylas sends GET ?challenge=xxxx to verify webhook.
+    """
+    if not challenge:
+        return JSONResponse({"error": "Missing challenge"}, status_code=400)
+    print(f"✅ Nylas webhook verified: {challenge}")
+    return PlainTextResponse(challenge, status_code=200)
