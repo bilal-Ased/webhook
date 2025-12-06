@@ -1,32 +1,37 @@
-from fastapi import FastAPI,Request
+from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse, JSONResponse
-
+import logging
 
 app = FastAPI()
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome"}
 
-
 @app.get("/incoming-call")
 def incoming_call(call_id: str, caller_name: str):
-    print(call_id, caller_name)
-    return {
-        "call_id": call_id,
-        "caller_name": caller_name
-    }
+    logging.info(f"Incoming call: {call_id}, {caller_name}")
+    return {"call_id": call_id, "caller_name": caller_name}
 
+# Robust POST webhook handler
+@app.post("/nylas/webhook")
+async def nylas_webhook(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        # If payload is not JSON, fallback to raw body
+        body_bytes = await request.body()
+        logging.warning(f"Received non-JSON payload: {body_bytes}")
+        return JSONResponse({"status": "error", "message": "Invalid JSON"}, status_code=400)
 
-@app.post("/webhook")
-async def webhook(request:Request):
-    data = await request.json()
-    print(data)
-    return {"data": data}
+    logging.info(f"Nylas webhook data received: {data}")
+    # Always return 200 OK to prevent 502 retries
+    return JSONResponse({"status": "ok"}, status_code=200)
 
-
-
-# nlyas webhook verification endpoint
+# Nylas webhook verification
 @app.get("/nylas/webhook")
 async def verify_webhook(challenge: str = ""):
     """
@@ -34,5 +39,7 @@ async def verify_webhook(challenge: str = ""):
     """
     if not challenge:
         return JSONResponse({"error": "Missing challenge"}, status_code=400)
-    print(f"✅ Nylas webhook verified: {challenge}")
+
+    logging.info(f"✅ Nylas webhook verified: {challenge}")
+    # Must return plain text exactly as challenge
     return PlainTextResponse(challenge, status_code=200)
